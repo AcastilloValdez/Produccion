@@ -72,6 +72,8 @@ Static nSecuInter := "0"
 Static nSecuBoli := "000000"
 Static nSecuProdu :="0000000"
 Static nSecuPichi := "0000000"
+Static nTotalValor := 0
+Static cSecmens := ""
 User Function UFCARTRAN
     //Local lSigue 		:= .T.
     STATIC cPerg    := "UBANC01"
@@ -79,20 +81,28 @@ User Function UFCARTRAN
     If !Pergunte(cPerg,.T.) //Form de Visualizacion de Preguntas
         Return
     EndIf
-    UCABGRID()
+
     If MV_PAR01 = ' '
-        MsgAlert(MV_PAR01)
-        //		lSigue := .F.
+        MsgAlert("Campo requerido Codigo de Banco", "A V I S O")
+        return .F.
     End if
-    //cSEK := RetSqlName('SEK')
-    //cSA2 := RetSqlName('SA2')
+    If EMPTY(MV_PAR03)
+        MsgAlert("Campo requerido Fecha Inicial","A V I S O")
+        return .F.
+    End if
+    If EMPTY(MV_PAR04)
+        MsgAlert("Campo requerido Fecha Final", "A V I S O")
+        return .F.
+    End if
+    UCABGRID()
 Return
-Static Function BuscBanco(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cidBanco)
+Static Function BuscBanco(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cidBanco,cSecuAuxi,cCodAlt)
     Local cDirectorio
     StaTic cDir     := "\\vm02milfss04\Bancos\"  // Ruta donde debera quedar guardado el documento para procesamiento por SIPECOM        \\02milsas01\Documentos\T0201\Facturas
     cDir     += "T02"+cEmpCod +"\"
-    cFileTxt := "T02"+cEmpCod+DTOS(MV_PAR03)+AllTrim(MV_PAR02)
-
+    //cFileTxt := "T02"+cEmpCod+DTOS(MV_PAR04)+cSecuAuxi
+    cSecmens := cSecuAuxi
+    cFileTxt := "T02"+cEmpCod+DTOS(MV_PAR05)+cSecuAuxi
     DO CASE
         CASE ALLTRIM(cidBanco) = "01" //BOLIVARIANO
             cDir     += "Bolivariano\"
@@ -101,7 +111,7 @@ Static Function BuscBanco(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, 
         CASE ALLTRIM(cidBanco) = "02" //Citybank
             cDir     += "Citybank\"
             cDirectorio := "\\vm02milfss04\Bancos\" + "T02"+cEmpCod +"\" + "Citybank\"
-            UPCITYBANK(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cDirectorio)
+            UPCITYBANK(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cDirectorio,cCodAlt)
         CASE ALLTRIM(cidBanco) = "04" //Guayaquil
             cDir     += "Guayaqui\"
         CASE ALLTRIM(cidBanco) = "06" //Internacional
@@ -150,7 +160,7 @@ Static Function UBANKBOLIV(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipo
         cA09  := Replicate(" ",2)
         cA10  := Replicate(" ",2)
         cA11  := Replicate(" ",20)
-        IF ALLTRIM(cTipo) == "TF" //SI NC
+        IF ALLTRIM(cTipo) != "NCP" //SI NC
             cA09 := ALLTRIM(Banco)
             cA10 := IIf(RTRIM(cTipoCu) == "1","03","04")
             cA11 := PadR(RTRIM(cCuentaP),20," ")
@@ -227,9 +237,9 @@ Static Function UPRODUBANK(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipo
         cA18 := RTRIM(cOrden) //CMTrxNum
         cA19 := "OPAGO" + RTRIM(cOrden)
         cDatos += cA01 +STR_TAB+ cA02 +STR_TAB+ cA03 +STR_TAB+ cA04 +STR_TAB+ cA05 +STR_TAB+;
-                  cA06 +STR_TAB+ cA07 +STR_TAB+ cA08 +STR_TAB+ cA09 +STR_TAB+ cA10 +STR_TAB+;
-                  cA11 +STR_TAB+ cA12 +STR_TAB+ cA13 +STR_TAB+ cA14 +STR_TAB+ cA15 +STR_TAB+;
-                  cA16 +STR_TAB+ cA160 +STR_TAB+ cA17 +STR_TAB+ cA18 +STR_TAB+ cA19 +STR_PULA
+            cA06 +STR_TAB+ cA07 +STR_TAB+ cA08 +STR_TAB+ cA09 +STR_TAB+ cA10 +STR_TAB+;
+            cA11 +STR_TAB+ cA12 +STR_TAB+ cA13 +STR_TAB+ cA14 +STR_TAB+ cA15 +STR_TAB+;
+            cA16 +STR_TAB+ cA160 +STR_TAB+ cA17 +STR_TAB+ cA18 +STR_TAB+ cA19 +STR_PULA
     Else// End
         UGENFILE(cDirectorio, cFileTxt, cFileExt, cDatos)
     EndIf
@@ -273,100 +283,113 @@ Static Function UBANKPCHA(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoC
         cA13 := RTRIM(cRuc) //RUC de proveedor,  PadR(RTRIM(PAGOS->EK_FORNECE),14," ")
         cA14 := RTRIM(cNombreP) + Replicate(" ", 60-Len(RTRIM(cNombreP)))//NOMBRE de proveedor,PadR(RTRIM(PAGOS->A2_NOME), 40," ")
         cA15 := ""
-        cA15 := ""
         cA16 := ""
-        cA17 := "GUAYAQUIL"
-        cA18 := RTRIM(cOrden) // CMTrxNum numero de transaccion cNum CAMBIA A LA ORDEN DE PAGO cOrden
-        cA19 := "REF-" + RTRIM(cOrden) //orden de pago
+        cA17 := ""
+        cA18 := "GUAYAQUIL"
+        cA19 := "OP" + RTRIM(cOrden) // CMTrxNum numero de transaccion cNum CAMBIA A LA ORDEN DE PAGO cOrden
+        cA20 := "REF-" + RTRIM(cOrden) //orden de pago
         cDatos += cA01 +STR_TAB+ cA02 +STR_TAB+ cA03 +STR_TAB+ cA04 +STR_TAB+ cA05 +STR_TAB+;
             cA06 +STR_TAB+ cA07 +STR_TAB+ cA08 +STR_TAB+ cA09 +STR_TAB+ cA10 +STR_TAB+;
             cA11 +STR_TAB+ cA12 +STR_TAB+ cA13 +STR_TAB+ cA14 +STR_TAB+ cA15 +STR_TAB+;
-            cA16 +STR_TAB+ cA17 +STR_TAB+ cA18 +STR_TAB+ cA19 +STR_PULA
+            cA16 +STR_TAB+ cA17 +STR_TAB+ cA18 +STR_TAB+ cA19 +STR_TAB+ cA20 +STR_PULA
     Else //  End
         UGENFILE(cDirectorio, cFileTxt, cFileExt, cDatos)
     EndIf
 Return
 
 
-Static Function UPCITYBANK(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,cFech,Banco,cDirectorio)
+Static Function UPCITYBANK(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,cFech,Banco,cDirectorio,cCodAlt)
 
     IF Opcion == 1
         nSecuCity := soma1(nSecuCity)
-        cA01 := "PAY218" //fijo
-        cA02 := PadL(cCuentaE,10,"0") //Cta empresa
+        cA01 := "PAY"
+        cA02 := "218"
+        cA03 := PadL(cCuentaE,10,"0")            //Trim(RsPagos!Bnkactnm) //Cta empresa
         cFecha := cFech
-        cA03 := SUBSTR(cFecha,3,6) //FECHA CARTA
-        cA09 := "USD" //moneda
+        cA04 := SUBSTR(cFecha,3,6)    //Format(RsPagos!Feccarta, "yymmdd")
+        If  ALLTRIM(cTipo) == "CH"            // RsPagos!Formapago = "CH"
+            cA05 := "077"
+            cA17 := "02"
+            cA26 := ""
+            cA28 := ""
+            cA29 := ""
+            cA39 := ""
+            cA40 := ""
+        Else
+            If  RTRIM(Banco) <> "24"       //Trim(RsPagos!Codbanco) <> "24"
+                cA05 := "071"
+                cA17 := "21"
+                cA26 := cCodAlt      //Cod_Alterno(Trim(RsPagos!Codbanco))
+                cA28 := PadL(RTRIM(cCuentaP),11,"0")                //RsPagos!Numcta
+                cA29 := IIF(RTRIM(cTipoCu) == "1","01","02") //1:corriente, 2:ahorro
+                cA39 := ""
+                cA40 := ""
+            EndIf
+            If  RTRIM(Banco) == "24"                 //Trim(RsPagos!Codbanco) = "24"
+                cA05 := "072"
+                cA17 := "01"
+                cA26 := ""
+                cA28 := ""
+                cA29 := ""
+                cA39 := PadL(RTRIM(cCuentaP),11,"0")               //Trim(RsPagos!Numcta)
+                cA40 := IIF(RTRIM(cTipoCu) == "1","01","02")
+            EndIf
+        EndIf
+        cA06 := "PMPAY" + RTRIM(cOrden) + Replicate(" ", 16-Len(RTRIM(cOrden)))        //Trim(RsPagos!Audittrail)
         formato := TRANSFORM(nValor, "@E 999999.99")
         unirValor := Val(StrTran(formato,".",""))
-        cA07  := StrZero(unirValor,15,0) //valor del orden de pago
-        cA30 := "001" //fijo
-        cA18_0 := ""
-        IF ALLTRIM(cTipo) == "CH" //
-            cA05 := "077" //fijo
-            cA17 := "02" //fijo
-            cA26 := ""
-        else
-            DO CASE
-                CASE RTRIM(Banco)<>"24"
-                    cA05 := "071"//PadL("37",4,"0") //fijo
-                    cA17 := "21" //fijo
-                    cA24 :=  PadL(RTRIM(cCuentaP),11,"0")    //cuenta proveedor cA28
-                    cA26 := "004" // codigo alterno Cod_Alterno(Trim(RsPagos!Codbanco))
-                    cA29 := IIF(RTRIM(cTipoCu) == "1","01","02") //1:corriente, 2:ahorro
-                CASE RTRIM(Banco)=="24"
-                    cA05 := "072"//PadL("34",4,"0") fijo
-                    cA17:= "01" //fijo
-                    cA24 := ""
-                    cA26 := ""
-                    cA29 := ""
-                OTHERWISE
-                    cA05 := "AAA"
-                    cA17:= "PT"
-                    cA24 :=  PadL(RTRIM(cCuentaP),11,"0")
-                    cA29 := PadL(Banco,4,"0")
-                    cA18_0 := ""
-            ENDCASE
-        ENDIF
-        cA06 := "PMPAY" + RTRIM(cOrden) + Replicate(" ", 16-Len(RTRIM(cOrden)))//Audittrail orden de pago
-        cA08 := nSecuCity //fijo Format(WNumRec, "####0") vendedor id si es 10 o 13 caracteres
-        cA11:= ALLTRIM(cRuc) + Replicate(" ", 21-Len(RTRIM(cRuc))) //vendedor ID longitud 21 con cA08 incluido
-        cA12:= Replicate(" ",5)
-
-        cA13 := RTRIM(StrZero(nValor,15,0)) //valor de pago->(TRXAMNT)        //RTRIM(PAGOS->EK_FORNECE) //RUC,  PadR(RTRIM(PAGOS->EK_FORNECE),14," ")
-        cA14 := "000000"
+        cA07 :=  nSecuCity //Format(WNumRec, "####0")
+        cA08 :=  ALLTRIM(cRuc) + Replicate(" ", 21-Len(RTRIM(cRuc)))  //Trim(WsRucpro)
+        cA09 := "USD"
+        cA10 :=  RTRIM(cRuc)  + Replicate(" ", 21-Len(RTRIM(cRuc))) //Trim(WsRucpro)
+        cA11 :=  StrZero(unirValor,15,0)  //Round(RsPagos!Trxamnt, 2)  //valor del orden de pago
+        cA12 := "000000"
         cRucP := RTRIM(cRuc)
         cOrdenPago := RTRIM(cOrden)
-        // cTransaccion := RTRIM(cNum)
-        cUnion := "OPAGO" + cRucP + cOrdenPago //+ cTransaccion
-        cA15 := PadR(RTRIM(cUnion),30," ") //REPARACION BOMBA INYECCION  //NOMBRE DESCRIPCION //NOMBRE,PadR(RTRIM(PAGOS->A2_NOME), 40," ")
-        cA16 := Replicate(" ",10)
-        cA16_1 := Replicate(" ",30)
-        cA16_2 := Replicate(" ",30)
-        cA16_3 := Replicate(" ",30)
-        cA18 := "01" //fijo
-        cA19:= PadR(RTRIM(cNombreP),65," ") //nombre del proveedor
-        cA20 := "GUAYAQUIL" //fijo
-        cA20_1 := Replicate(" ",61)
-        cA21 := "PLAZA DEL SOL" //fijo
-        cA21_1 := Replicate(" ",4)
-        cA22 := RTRIM("000000000000")//fijo
-        cA22_1 := Replicate(" ",20)
-        cA23 := RTRIM("00000000")//fijo"00000000"
-        cA23_1 := Replicate(" ",20)
-        cA24_1 := Replicate(" ",20)
-        cA24_2 := Replicate(" ",30)
-        cA24_3 := Replicate(" ",40)
-        cA25 := "999999999999999" //fijo
-        cA27 := "2"
-        cAdicional := Replicate(" ",30)
-        cDatos += cA01+cA02+cA03+cA05+cA06+cA08+cA11+cA09+cA11+cA12+;
-            cA13+cA14+cA15+cA16+cA16_1+cA16_2+cA16_3+cA18_0+cA17+cA18+cA19+;
-            cA20+cA20_1+cA21+cA21_1+cA22+cA22_1+cA23+cA23_1+cA29+/*cA24*+*/cA24_1+cA30+cA24_2+cA24_3+;
-            cA25+cA27+cAdicional+STR_PULA
+        cUnion := "OPAGO" + cRucP + cOrdenPago
+        cA13 :=  PadR(RTRIM(cUnion),30," ")       //Trim(RsPagos!DSCRIPTN)
+        cA14 := ""
+        cA15 := ""
+        cA16 := ""
+        cA18 := "01"
+        cA19 := PadR(RTRIM(cNombreP),65," ")       //Left(Trim(WsNompro), 80)
+        cA20 := "GUAYAQUIL"
+        cA21 := Replicate(" ",51)
+        cA22 := ""
+        cA22 := "PLAZA DEL SOL"
+        cA23 := Replicate(" ",4)
+        cA24 := "000000000000"
+        cA25 :=  Replicate(" ",19)//d
+        cA27 := "00000000"
+        cA30 :=  Replicate(" ",20)
+        cA31 :=  Replicate(" ",20)
+        cA32 :=  Replicate(" ",30)
+        cA33 :=  Replicate(" ",30)
+        cA34 :=  Replicate(" ",20)
+        cA35 :=  Replicate(" ",20)
+        cA36 := ""
+        cA37 := ""
+        cA38 := ""
+        cA41 := "001"
+        cA42 :=  Replicate(" ",40)
+        cA43 :=  Replicate(" ",30)
+        cA44 :=  Replicate(" ",10)
+        cA45 := "999999999999999"
+        cA46 := "2"
+        cA47 :=  Replicate(" ",30)
+        cA48 :=  Replicate(" ",30)
+        cA49 :=  Replicate(" ",30)
+        cDatos += cA01 + cA02 + cA03 + cA04 + cA05 + cA06 + cA07 + cA08 + cA09 + cA10+;
+            cA11 + cA12 + cA13 + cA14 + cA15 + cA16 + cA17 + cA18 + cA19 + cA20+;
+            cA21 + cA22 + cA23 + cA24 + cA25 + cA26 + cA27 + cA28 + cA29 + cA30+;
+            cA31 + cA32 + cA33 + cA34 + cA35 + cA36 + cA37 + cA38 + cA39 + cA40+;
+            cA41 + cA42 + cA43 + cA44 + cA45 + cA46 + cA47 + cA48 + cA49 +STR_PULA
+        nTotalValor += unirValor
     Else
-        UGENFILE(cDirectorio, cFileTxt, cFileExt, cDatos) //Llamoa la funcion para crear el archivo
+        cDatos += "TRL" + StrZero(Val(nSecuCity),15)  +StrZero(nTotalValor,15,0) + "000000000000000" + StrZero(Val(nSecuCity),15)
+        UGENFILE(cDirectorio, cFileTxt, cFileExt, cDatos) //Llama la funcion para crear el archivo
     EndIf
+
 Return
 
 Static Function UBANKINTER(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,cFech,Banco,cDirectorio)
@@ -411,9 +434,9 @@ Static Function UBANKINTER(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipo
         cA35 := "OPAGO" + PadR(RTRIM(cOrden),30," ") //orden de pago
         cA36 :=  "REF" + RTRIM(cRuc) + "-" + RTRIM(cOrden) //+  RTRIM(cNum) //remplaza por el nombre de la actividad
         cDatos += cA01 +STR_TAB+ cA03 +STR_TAB+ cA05 +STR_TAB+ cA07 +STR_TAB+ cA09 +STR_TAB+;
-                  cA11 +STR_TAB+ cA14 +STR_TAB+ cA16 +STR_TAB+ cA19 +STR_TAB+ cA21 +STR_TAB+;
-                  cA24 +STR_TAB+ cA27 +STR_TAB+ cA30 +STR_TAB+ cA33 +STR_TAB+ cA29 +STR_TAB+;
-                  cA31 +STR_TAB+ cA32 +STR_TAB+ cA34 +STR_TAB+ cA35 +STR_TAB+ cA36 +STR_PULA
+            cA11 +STR_TAB+ cA14 +STR_TAB+ cA16 +STR_TAB+ cA19 +STR_TAB+ cA21 +STR_TAB+;
+            cA24 +STR_TAB+ cA27 +STR_TAB+ cA30 +STR_TAB+ cA33 +STR_TAB+ cA29 +STR_TAB+;
+            cA31 +STR_TAB+ cA32 +STR_TAB+ cA34 +STR_TAB+ cA35 +STR_TAB+ cA36 +STR_PULA
     Else
         UGENFILE(cDirectorio, cFileTxt, cFileExt, cDatos)
     EndIf
@@ -422,7 +445,7 @@ Return
 Static Function UGENFILE(cDirec, cFileTxt, cFileExt, cDatos)
     Local nHandle := 0
     Local cRoute  := "c:\temp\"+cFileTxt+cFileExt
-  //    Local cRoute  := cDirec+cFileTxt+cFileExt
+    //Local cRoute  := cDirec+cFileTxt+cFileExt
     nHandle       := FCreate(cRoute,FC_NORMAL,0,.F.)
 
     If nHandle < 0
@@ -430,7 +453,7 @@ Static Function UGENFILE(cDirec, cFileTxt, cFileExt, cDatos)
     Else
         FWrite(nHandle,cDatos)
         FClose(nHandle)
-        MsgInfo("Archivo Generado correctamente...","Carta de Transferencia")
+        MsgInfo("Archivo Generado correctamente...  Su numero de Carta: " + cSecmens,"Carta de Transferencia")
     EndIf
 Return
 
@@ -439,27 +462,27 @@ Static Function UCABGRID()
     Local aArea := GetArea()
     Local oPedido
     Local cCodBanco := MV_PAR01
-    Local cFechIni := MV_PAR02
-    Local cFechFin := MV_PAR03
-    Local cFechCar := MV_PAR04
-    Local cDiri := MV_PAR05
-    Local cNombre := MV_PAR06
+    Local cDescripcion := MV_PAR02
+    Local cFechIni := MV_PAR03 //MV_PAR02
+    Local cFechFin := MV_PAR04 //MV_PAR03
+    Local cFechCar := MV_PAR05 //MV_PAR04
+    Local cDiri := MV_PAR06 //MV_PAR05
+    Local cNombre := MV_PAR07 //MV_PAR06
 
-    cVar1 := DTOS(MV_PAR02) //Convierte fecha a caracter con un formato ejemplo 23/04/2021 a 20210423 tipo caracter
+    //cVar1 := DTOS(MV_PAR02) //Convierte fecha a caracter con un formato ejemplo 23/04/2021 a 20210423 tipo caracter
     // M + posicion 7 hasta 2 caracter al extraer el |03| dia 202104|03-> dia
-    cFech := "M" + SUBSTR(cVar1,7,2) + SUBSTR(cVar1,5,2) +  SUBSTR(cVar1,3,2)
+    //cFech := "M" + SUBSTR(cVar1,7,2) + SUBSTR(cVar1,5,2) +  SUBSTR(cVar1,3,2)
     // cAno := SUBSTR(cVar1,3,2)
     //cMes := SUBSTR(cVar1,5,2)
     //  cdia := SUBSTR(cVar1,7,2)
     // cUnion := "M" + cdia + cMes + cAno
-
-    cNoCon := "PICHINCHA"
     //Objetos de la ventana
     Private oDlgPvt
     Private oMsGetPAG
     Private aHead := {}
     Private aCols := {}
     Private oBtnProc
+    Private oBtnCerrar
     //Tamaño de la ventana
     Private    nJanLarg    := 700
     Private    nJanAltu    := 500
@@ -472,22 +495,22 @@ Static Function UCABGRID()
 
     //              Título               Campo        Máscara                        Tamaño                   Decimal                   Valid               Usado  Tipo F3     Combo
 
-    aAdd(aHead, {"",            "CHECK",       "@BMP",                              2,                          0,                        ".F.",              "   ", "C", "",    "V",     "",      "",        "", "V"})
-    aAdd(aHead, {"Banco",            "BANCO",        "",                            15,  		     	        0,                        ".T.",              ".T.", "C", "",    "" } )
-    aAdd(aHead, {"Ruc",              "EK_FORNECE",   "",                            21,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
-    aAdd(aHead, {"Proveedor",        "A2_NOME",      "",                            30,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
+    aAdd(aHead, {"",                  "CHECK",       "@BMP",                        2,                          0,                        ".F.",              "   ", "C", "",    "V",     "",      "",        "", "V"})
+    aAdd(aHead, {"Ruc",              "EK_FORNECE",   "",                            15,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
+    aAdd(aHead, {"Proveedor",        "A2_NOME",      "",                            35,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
+    aAdd(aHead, {"Valor",            "EK_VALOR",    "@E 999,999,999,999,999.99",    10, 		    	        0,                        ".T.",              ".T.", "N", "",    ""} )
+    aAdd(aHead, {"Cuenta Proveedor", "FIL_CONTA",   "",                             11, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Banco Proveedor",   "Z41_DESCRI",   "",                           24, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Tipo Cuenta",      "FIL_TIPCTA",   "",                            20, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Cuenta Empresa",    "A6_NUMCON",    "",                           20, 					        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"#Transaccion",     "EK_NUM",       "",                            13,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
     aAdd(aHead, {"Orden",            "EK_ORDPAGO",   "",                            15, 					    0,                        ".T.",              ".T.", "C", "",    ""} )
     aAdd(aHead, {"Tipo",             "EK_TIPO",      "",                            10,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Cuenta Proveedor", "FIL_CONTA",   "",                             20, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Tipo Cuenta",      "FIL_TIPCTA",   "",                            20, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Valor",            "EK_VALOR",    "@E 999,999,999,999,999.99",    18, 		    	        0,                        ".T.",              ".T.", "N", "",    ""} )
-    aAdd(aHead, {"Cuenta Empresa",    "A6_NUMCON",    "",                          20, 					    0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"#Transaccion",     "EK_NUM",       "",                            13,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
     aAdd(aHead, {"Tipo Dcto",        "TDOC",   "",                                  2, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
     aAdd(aHead, {"Prefijo Titulo",   "EK_PREFIXO",   "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
     aAdd(aHead, {"Cuota",            "EK_PARCELA",   "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Sec.Registro",     "EK_SEQ",   "",                                2, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
-
+    aAdd(aHead, {"Sec.Registro",     "EK_SEQ",       "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Banco",            "BANCO",        "",                            3,  		     	        0,                        ".T.",              ".T.", "C", "",    "" } )
     Processa({|| UDETGRID() }, "Cargando ... Espere ....")
     //Creación de la pantalla con los datos a informar
     DEFINE MSDIALOG oDlgPvt TITLE "CARTA TRANSFERENCIA" FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
@@ -496,19 +519,19 @@ Static Function UCABGRID()
     @ 011, 005 MSGET oPedido VAR cCodBanco SIZE 045, 010 OF oDlgPvt   READONLY PIXEL
     @ 004, 070 SAY oSay2 PROMPT  "Fecha Carta:" SIZE 040, 007 OF oDlgPvt PIXEL
     @ 011, 070 MSGET oPedido VAR  cFechCar SIZE 040, 010 OF oDlgPvt  READONLY PIXEL
-    /* @ 004, 132 SAY oSay3 PROMPT  "Banco:" SIZE 025, 007 OF oDlgPvt PIXEL
-    @ 011, 132 MSGET oPedido VAR cNoCon SIZE 131, 010 OF oDlgPvt READONLY PIXEL*/
+    @ 004, 132 SAY oSay3 PROMPT  "Banco:" SIZE 025, 007 OF oDlgPvt PIXEL
+    @ 011, 132 MSGET oPedido VAR cDescripcion SIZE 131, 010 OF oDlgPvt READONLY PIXEL
     @ 024, 005 SAY oSay4 PROMPT "Fecha Inicial:" SIZE 040, 007 OF oDlgPvt PIXEL
     @ 031, 005 MSGET oPedido VAR cFechIni SIZE 060, 010 OF oDlgPvt READONLY  PIXEL
     @ 024, 070 SAY oSay5 PROMPT "Fecha Final:" SIZE 040, 007 OF oDlgPvt PIXEL
     @ 031, 070 MSGET oPedido VAR cFechFin SIZE 070, 010 OF oDlgPvt READONLY PIXEL
-    @ 024, 150 SAY oSay4 PROMPT "Dirigido:" SIZE 035, 007 OF oDlgPvt PIXEL
-    @ 031, 150 MSGET oPedido VAR cDiri SIZE 065, 010 OF oDlgPvt  READONLY PIXEL
+    @ 024, 150 SAY oSay4 PROMPT "Dirigido:" SIZE 037, 007 OF oDlgPvt PIXEL
+    @ 031, 150 MSGET oPedido VAR cDiri SIZE 070, 010 OF oDlgPvt  READONLY PIXEL
     @ 024, 220 SAY oSay5 PROMPT "Nombre:" SIZE 035, 007 OF oDlgPvt PIXEL
-    @ 031, 220 MSGET oPedido VAR cNombre SIZE 125, 010 OF oDlgPvt  READONLY PIXEL
+    @ 031, 220 MSGET oPedido VAR cNombre SIZE 115, 010 OF oDlgPvt  READONLY PIXEL
     //Botones
-
-    @ 008, (nJanLarg/2-001)-(0067*01) BUTTON oBtnProc  PROMPT "Procesar"   SIZE 045, 015 OF oDlgPvt ACTION (Proccess())  FONT oFontBtn PIXEL
+    @ 008, (nJanLarg/2-001)-(0080*01) BUTTON oBtnCerrar  PROMPT "Cerrar"   SIZE 040, 015 OF oDlgPvt ACTION (oDlgPvt:End()) FONT oFontBtn PIXEL
+    @ 008, (nJanLarg/2-001)-(0037*01) BUTTON oBtnProc  PROMPT "Procesar"   SIZE 040, 015 OF oDlgPvt ACTION (Processa({|| Proccess() },"Espere..."))  FONT oFontBtn PIXEL
 
     //Grid dos grupos
     oMsGetPAG := MsNewGetDados():New(    045,;                //nTop      - Linea Inicial
@@ -547,7 +570,7 @@ Static Function UDETGRID()
     cQuery += "       FIL.FIL_CONTA,  FIL.FIL_TIPCTA, FIL.FIL_TIPO,   FIL.FIL_MOVCTO,"               + CRLF
     cQuery += "       SEK.EK_BANCO,   SA6.A6_NUMCON,  SA6.A6_NREDUZ,  SA6.A6_CONTATO,"               + CRLF
     cQuery += "       SEK.EK_CONTA,   SEK.EK_LA,      S.EK_NUM,          S.EK_FORNECE,"              + CRLF
-    cQuery += "       S.EK_FORNEPG,   Z41.Z41_CODBAN AS CODBANCO, Z41.Z41_CODALT"                    + CRLF
+    cQuery += "       S.EK_FORNEPG,   Z41.Z41_CODBAN AS CODBANCO, Z41.Z41_CODALT, Z41.Z41_DESCRI"    + CRLF
     cQuery += " FROM  " + RetSQLName('SEK') + " SEK"                                                 + CRLF
     cQuery += "     INNER JOIN "+RetSQLName('SA2')+ " SA2" +" ON SEK.EK_FORNECE = SA2.A2_COD"        + CRLF
     cQuery += "                      AND SEK.EK_LOJA    = SA2.A2_LOJA"                               + CRLF
@@ -563,15 +586,16 @@ Static Function UDETGRID()
     cQuery += " WHERE SEK.EK_TIPODOC IN('PA','TB') "                                                 + CRLF
     cQuery += "  AND SEK.EK_TIPO IN('PA','NF') "                                                     + CRLF
     cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
-   // cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "'"                                                     + CRLF
-    cQuery += "  AND SA6.A6_COD = '01' "                                                     + CRLF
-    cQuery += "  AND SEK.EK_LA <> 'C'"                                                               + CRLF
-    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR02) + "' AND '"+DTOS(MV_PAR03)+"'" + CRLF
-    cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*'"                                + CRLF
-    cQuery += "  AND S.D_E_L_E_T_ <> '*'"                                                            + CRLF
-    cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                            + CRLF
-    cQuery += "  AND SEK.EK_XCARSTS <> 'P' "                                                            + CRLF
-    cQuery += "  ORDER BY SEK.EK_ORDPAGO ASC "
+    //  cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "'"                                                     + CRLF
+    cQuery += "  AND SA6.A6_COD = '01' "                                                                    + CRLF
+    cQuery += "  AND SEK.EK_LA <> 'C'"                                                                      + CRLF
+    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'"              + CRLF
+    cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*'"                                       + CRLF
+    cQuery += "  AND S.D_E_L_E_T_ <> '*'"                                                                   + CRLF
+    cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                                  + CRLF
+    cQuery += "  AND SEK.EK_XCARSTS <> 'P' "                                                                + CRLF
+    cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                         + CRLF
+    cQuery += "  ORDER BY SA2.A2_NOME ASC "
 
     TCQuery cQuery New Alias "QRY_SEK"
 
@@ -583,20 +607,21 @@ Static Function UDETGRID()
         //Adiciona o item no aCols
         aAdd(aCols, { ;
             oBmpOK,;
-            QRY_SEK->CODBANCO,;
             QRY_SEK->EK_FORNECE,;
             QRY_SEK->A2_NOME,;
-            QRY_SEK->EK_ORDPAGO,;
-            QRY_SEK->EK_TIPO,;
-            QRY_SEK->FIL_CONTA,;
-            QRY_SEK->FIL_TIPCTA,;
             QRY_SEK->EK_VALOR,;
+            QRY_SEK->FIL_CONTA,;
+            QRY_SEK->Z41_DESCRI,;
+            QRY_SEK->FIL_TIPCTA,;
             QRY_SEK->A6_NUMCON,;
             QRY_SEK->EK_NUM,;
+            QRY_SEK->EK_ORDPAGO,;
+            QRY_SEK->EK_TIPO,;
             QRY_SEK->TDOC,;
             QRY_SEK->EK_PREFIXO,;
             QRY_SEK->EK_PARCELA,;
             QRY_SEK->EK_SEQ,;
+            QRY_SEK->CODBANCO,;
             .F. ;
             })
 
@@ -626,7 +651,8 @@ Static Function Proccess()
     Local nPosEK_FORNECE  := aScan(aHead, {|x| Alltrim(x[2]) == "EK_FORNECE"})
     Local nPosA2_NOME  := aScan(aHead, {|x| Alltrim(x[2]) == "A2_NOME"})
     Local nLinea   := 0
-    Local dFechCart := MV_PAR04
+    Local dFechCart := MV_PAR05 //MV_PAR04
+    Local cSecuAuxi := ""
     Static cAgencia := ""
     Static cNumCon := ""
     Static  cCod := ""
@@ -640,6 +666,7 @@ Static Function Proccess()
         cVar1 := DTOS(dFechCart)
         cFech := "M" + SUBSTR(cVar1,7,2) + SUBSTR(cVar1,5,2) +  SUBSTR(cVar1,3,2)
         //Recorriendo lineas del Grid
+        // Begin Transaction
         For nLinea := 1 To Len(aColsAux)
             //Posicion del Grid
 
@@ -691,13 +718,15 @@ Static Function Proccess()
                 ENDIF
 
             EndIf
-
         Next
-        Agrupar()
+        DBCloseArea()
+        //End Transaction
+        cSecuAuxi := cFech + cValor
+        Agrupar(cSecuAuxi)
         /*Opcion 2 genera el archivo*/
         // BuscBanco(2, "","","","","","","","","","","","",cCodBanco)
         //UFSEKCAB(cOrden,dFechCart)
-        MsgInfo("Proceso Exitoso...!  Su numero de Carta: " +  cFech + cValor, "Atencion")
+        //MsgInfo("Proceso Exitoso...!  Su numero de Carta: " +  cFech + cValor, "A V I S O")
     EndIf
     oDlgPvt:End() //Cierra la Venta de Dialogo
 Return
@@ -738,7 +767,7 @@ Static Function Consecu(cCodBanco,nOpcion,nSecTran)
     EndIf
 Return nSecu
 
-Static Function Agrupar()
+Static Function Agrupar(cSecuAuxi)
     Local aArea  := GetArea()
     Local cQuery   := ""
     cCodBanco := MV_PAR01
@@ -762,14 +791,16 @@ Static Function Agrupar()
     cQuery += " WHERE SEK.EK_TIPODOC IN('PA','TB') "                                                 + CRLF
     cQuery += "  AND SEK.EK_TIPO IN('PA','NF') "                                                     + CRLF
     cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
-   // cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "'"                                                     + CRLF
+    //cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "'"                                                     + CRLF
     cQuery += "  AND SA6.A6_COD = '01' "                                                     + CRLF
     cQuery += "  AND SEK.EK_LA <> 'C'"                                                               + CRLF
-    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR02) + "' AND '"+DTOS(MV_PAR03)+"'" + CRLF
+    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'" + CRLF
     cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*'"                                  + CRLF
     cQuery += "  AND S.D_E_L_E_T_ <> '*'"                                                              + CRLF
     cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                             + CRLF
     cQuery += "  AND SEK.EK_XCARSTS = 'P' "                                                         + CRLF
+    cQuery += "  AND SEK.EK_XNUMCAR = '" +cSecuAuxi+ "'"                                                         + CRLF
+    cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                         + CRLF
     cQuery += "  GROUP BY SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC,  SEK.EK_XCARFEC,"                + CRLF
     cQuery += "  SEK.EK_SEQ, SEK.EK_FORNECE, SA2.A2_NOME, FIL.FIL_CONTA, FIL.FIL_TIPCTA, FIL.FIL_TIPO, " + CRLF
     cQuery += "  SA6.A6_NUMCON, Z41.Z41_CODBAN, Z41.Z41_CODALT"                                         + CRLF
@@ -789,11 +820,12 @@ Static Function Agrupar()
         cNombreP :=  Q_SEK->A2_NOME
         dFechCart := Q_SEK->EK_XCARFEC
         cBancoN :=   Q_SEK->CODBANCO
-        BuscBanco(1, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, cBancoN,cCodBanco)
+        cCodAlt :=   Q_SEK->Z41_CODALT
+        BuscBanco(1, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,nTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, cBancoN,cCodBanco,"",cCodAlt)
         Q_SEK->(DbSkip())
     EndDo
     Q_SEK->(DbCloseArea())
-    BuscBanco(2, "","","","","","","","","","","",cCodBanco)
+    BuscBanco(2, "","","","","","","","","","","",cCodBanco,cSecuAuxi,"")
     RestArea(aArea)
 Return
 
