@@ -66,7 +66,6 @@ Static cDatos   := ""                         // Variable que tendra los datos p
 Static cEmpCod  := ""
 Static oBmpOK := LoadBitmap(GetResource(),"LBOK") //Objeto tipo check OK
 Static oBmpNo := LoadBitmap(GetResource(),"LBNO") //Objeto tipo check NO
-Static cQueryCopia
 Static nSecuCity := "00000000"
 Static nSecuInter := "0"
 Static nSecuBoli := "000000"
@@ -76,24 +75,35 @@ Static nTotalValor := 0
 Static cSecmens := ""
 User Function UFCARTRAN
     //Local lSigue 		:= .T.
+    Local lSigue 		:= .F.
+    Local lActive := .T.
     STATIC cPerg    := "UBANC01"
     cEmpCod   := FWCodEmp() //Obtiene el codigo de la empresa,
     If !Pergunte(cPerg,.T.) //Form de Visualizacion de Preguntas
         Return
     EndIf
-
-    If MV_PAR01 = ' '
-        MsgAlert("Campo requerido Codigo de Banco", "A V I S O")
-        return .F.
-    End if
-    If EMPTY(MV_PAR03)
-        MsgAlert("Campo requerido Fecha Inicial","A V I S O")
-        return .F.
-    End if
-    If EMPTY(MV_PAR04)
-        MsgAlert("Campo requerido Fecha Final", "A V I S O")
-        return .F.
-    End if
+    While lActive
+        lSigue := .F.
+        If MV_PAR01 = ' '
+            MsgAlert("Campo requerido Codigo de Banco", "A V I S O")
+            lSigue := .T.
+        End if
+        If EMPTY(MV_PAR03)
+            MsgAlert("Campo requerido Fecha Inicial","A V I S O")
+            lSigue := .T.
+        End if
+        If EMPTY(MV_PAR04)
+            MsgAlert("Campo requerido Fecha Final", "A V I S O")
+            lSigue := .T.
+        End if
+        If lSigue
+            If !Pergunte(cPerg,.T.) //Form de Visualizacion de Preguntas
+                Return
+            EndIf
+        else
+            lActive := .F.
+        EndIf
+    End
     UCABGRID()
 Return
 Static Function BuscBanco(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cidBanco,cSecuAuxi,cCodAlt)
@@ -493,6 +503,8 @@ Static Function UCABGRID()
     Private    oFontSubN  := TFont():New(cFontUti,,-20,,.T.)
     Private    oFontBtn   := TFont():New(cFontUti,,-14)
 
+
+    Static bVerificar := .F.
     //              Título               Campo        Máscara                        Tamaño                   Decimal                   Valid               Usado  Tipo F3     Combo
 
     aAdd(aHead, {"",                  "CHECK",       "@BMP",                        2,                          0,                        ".F.",              "   ", "C", "",    "V",     "",      "",        "", "V"})
@@ -531,8 +543,9 @@ Static Function UCABGRID()
     @ 031, 220 MSGET oPedido VAR cNombre SIZE 115, 010 OF oDlgPvt  READONLY PIXEL
     //Botones
     @ 008, (nJanLarg/2-001)-(0080*01) BUTTON oBtnCerrar  PROMPT "Cerrar"   SIZE 040, 015 OF oDlgPvt ACTION (oDlgPvt:End()) FONT oFontBtn PIXEL
-    @ 008, (nJanLarg/2-001)-(0037*01) BUTTON oBtnProc  PROMPT "Procesar"   SIZE 040, 015 OF oDlgPvt ACTION (Processa({|| Proccess() },"Espere..."))  FONT oFontBtn PIXEL
-
+    If bVerificar
+        @ 008, (nJanLarg/2-001)-(0037*01) BUTTON oBtnProc  PROMPT "Procesar"   SIZE 040, 015 OF oDlgPvt ACTION (Processa({|| Proccess() },"Espere..."))  FONT oFontBtn PIXEL
+    endIf
     //Grid dos grupos
     oMsGetPAG := MsNewGetDados():New(    045,;                //nTop      - Linea Inicial
         003,;                //nLeft     - Colunma Inicial
@@ -551,7 +564,9 @@ Static Function UCABGRID()
         oDlgPvt,;            //oWnd      - Ventana que posee la cuadricula
         aHead,;           //aHeader   - Cabecera del Grid
         aCols)
-    oMsGetPAG:oBrowse:bLDblClick := {|| oMsGetPAG:EditCell(), oMsGetPAG:aCols[oMsGetPAG:nAt,1] := iif(oMsGetPAG:aCols[oMsGetPAG:nAt,1] == oBmpNo,oBmpOK,oBmpNo)}
+    If bVerificar
+        oMsGetPAG:oBrowse:bLDblClick := {|| oMsGetPAG:EditCell(), oMsGetPAG:aCols[oMsGetPAG:nAt,1] := iif(oMsGetPAG:aCols[oMsGetPAG:nAt,1] == oBmpNo,oBmpOK,oBmpNo)}
+    endIf
     //aCols     - Datos del Grid
     //Desativa las manipulaciones
     oMsGetPAG:lActive := .F.
@@ -603,6 +618,12 @@ Static Function UDETGRID()
     ProcRegua(nTotal) //Calcula cuantas informacion existe
     //Se posiciona en el primer registro
     QRY_SEK->(DbGoTop())
+
+    If ! QRY_SEK->(EoF())
+        bVerificar := .T.
+    EndIf
+
+
     While ! QRY_SEK->(EoF())
         //Adiciona o item no aCols
         aAdd(aCols, { ;
