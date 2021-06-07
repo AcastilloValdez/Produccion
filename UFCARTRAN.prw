@@ -493,6 +493,7 @@ Static Function UCABGRID()
     Private aCols := {}
     Private oBtnProc
     Private oBtnCerrar
+    Private oBtnCalcular
     //Tamaño de la ventana
     Private    nJanLarg    := 700
     Private    nJanAltu    := 500
@@ -501,6 +502,7 @@ Static Function UCABGRID()
     Private    oFontAno   := TFont():New(cFontUti,,-38)
     Private    oFontSub   := TFont():New(cFontUti,,-20)
     Private    oFontSubN  := TFont():New(cFontUti,,-20,,.T.)
+    Private    oFontAviso  := TFont():New(cFontUti,,-24)
     Private    oFontBtn   := TFont():New(cFontUti,,-14)
 
 
@@ -546,8 +548,11 @@ Static Function UCABGRID()
     If bVerificar
         @ 008, (nJanLarg/2-001)-(0037*01) BUTTON oBtnProc  PROMPT "Procesar"   SIZE 040, 015 OF oDlgPvt ACTION (Processa({|| Proccess() },"Espere..."))  FONT oFontBtn PIXEL
     endIf
+    If bVerificar
+     @ 044, (nJanLarg/2-001)-(0080*01) BUTTON oBtnCalcular  PROMPT "Calcular"   SIZE 040, 015 OF oDlgPvt ACTION (Processa({|| _calcular(@oDlgPvt), oDlgPvt:Refresh() },"Espere...")) FONT oFontBtn PIXEL
+    endIf
     //Grid dos grupos
-    oMsGetPAG := MsNewGetDados():New(    045,;                //nTop      - Linea Inicial
+    oMsGetPAG := MsNewGetDados():New(    060,;                //nTop      - Linea Inicial
         003,;                //nLeft     - Colunma Inicial
         (nJanAltu/2)-3,;     //nBottom   - Linea Final
         (nJanLarg/2)-3,;     //nRight    - Columna Final
@@ -850,3 +855,24 @@ Static Function Agrupar(cSecuAuxi)
     RestArea(aArea)
 Return
 
+Static Function _calcular(oDlgPvt)
+    Local aColsAux := oMsGetPAG:aCols //Objeto de MsNewGetDatos del Grid para la carga de informacion detalle
+    Local bPosCheck  := aScan(aHead, {|x| Alltrim(x[2]) == "CHECK"})
+    Local nPosEK_VALOR  := aScan(aHead, {|x| Alltrim(x[2]) == "EK_VALOR"}) //YA
+    Local nLinea   := 0
+    Local nValor :=0
+    Local nValorTotal :=0
+    
+    For nLinea := 1 To Len(aColsAux)
+        If  aColsAux[nLinea][bPosCheck] == oBmpOK
+              nValor := aColsAux[nLinea][nPosEK_VALOR] 
+              nValorTotal += nValor   
+        EndIf
+    Next
+    /*
+        @ 044, 90 SAY "Total: $"  SIZE 200, 030 FONT oFontAviso  OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+        @ 044, 140 SAY transform(nValorTotal,"@E 999,999,999,999.99")  SIZE 200, 030 FONT oFontAviso  OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+        oDlgPvt:Refresh()*/
+    MsgInfo(Transform(nValorTotal,"@E 999,999,999,999.99"),"Total")
+    //ALERT(Transform(nValorTotal,"@E 999,999,999,999.99"))
+Return
