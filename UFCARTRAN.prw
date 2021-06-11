@@ -61,9 +61,9 @@
 #Define STR_TAB     Chr(9)
 
 Static cFileTxt := ""                         //Nombre del archivo
-StaTic cFileExt := ".txt"                    //Extencion del archivo plano
-Static cDatos   := ""                         // Variable que tendra los datos para el rchivo .TXT
-Static cEmpCod  := ""
+StaTic cFileExt := ".txt"                     //Extencion del archivo plano
+Static cDatos   := ""                         //Variable que tendra los datos para el rchivo .TXT
+Static cEmpCod  := ""                         //Codigo de la empresa
 Static oBmpOK := LoadBitmap(GetResource(),"LBOK") //Objeto tipo check OK
 Static oBmpNo := LoadBitmap(GetResource(),"LBNO") //Objeto tipo check NO
 Static nSecuCity := "00000000"
@@ -114,27 +114,29 @@ Static Function BuscBanco(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, 
     cSecmens := cSecuAuxi
     cFileTxt := "T02"+cEmpCod+DTOS(MV_PAR05)+cSecuAuxi
     DO CASE
-        CASE ALLTRIM(cidBanco) = "01" //BOLIVARIANO
+        CASE ALLTRIM(cidBanco) = "BOLIVARIANO" //BOLIVARIANO
             cDir     += "Bolivariano\"
             cDirectorio := "\\vm02milfss04\Bancos\" + "T02"+cEmpCod +"\" + "Bolivariano\"
             UBANKBOLIV(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cDirectorio)
-        CASE ALLTRIM(cidBanco) = "02" //Citybank
+        CASE ALLTRIM(cidBanco) = "CITYBANK" //Citybank
             cDir     += "Citybank\"
             cDirectorio := "\\vm02milfss04\Bancos\" + "T02"+cEmpCod +"\" + "Citybank\"
             UPCITYBANK(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cDirectorio,cCodAlt)
-        CASE ALLTRIM(cidBanco) = "04" //Guayaquil
-            cDir     += "Guayaqui\"
-        CASE ALLTRIM(cidBanco) = "06" //Internacional
+        CASE ALLTRIM(cidBanco) = "GUAYAQUIL" //Guayaquil
+            cDir     += "Guayaqui\" 
+            ALERT("NO SE HA DEFINIDO ESTRUCTURA DE ARCHIVO PARA ESTE BANCO...!!!")
+        CASE ALLTRIM(cidBanco) = "INTERNACIONAL" //Internacional
             cDir     += "Internacional\"
             cDirectorio := "\\vm02milfss04\Bancos\" + "T02"+cEmpCod +"\" + "Internacional\"
             UBANKINTER(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart,Banco,cDirectorio)
-        CASE ALLTRIM(cidBanco) = "08" //Pacifico
+        CASE ALLTRIM(cidBanco) = "PACIFICO" //Pacifico
             cDir     += "Pacifico\"
-        CASE ALLTRIM(cidBanco) = "09" //"PICHINCHA"
+            ALERT("NO SE HA DEFINIDO ESTRUCTURA DE ARCHIVO PARA ESTE BANCO...!!!")
+        CASE ALLTRIM(cidBanco) = "PICHINCHA" //"PICHINCHA"
             cDir     += "Pichinch\"
             cDirectorio := "\\vm02milfss04\Bancos\" + "T02"+cEmpCod +"\" + "Pichinch\"
             UBANKPCHA(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart,Banco,cDirectorio)
-        CASE ALLTRIM(cidBanco) = "10" //"PRODUBANCO"
+        CASE ALLTRIM(cidBanco) = "PRODUBANCO" //"PRODUBANCO"
             cDir     += "Produbanco\"
             cDirectorio := "\\vm02milfss04\Bancos\" + "T02"+cEmpCod +"\" + "Produbanco\"
             UPRODUBANK(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart,Banco,cDirectorio)
@@ -455,7 +457,7 @@ Return
 Static Function UGENFILE(cDirec, cFileTxt, cFileExt, cDatos)
     Local nHandle := 0
     Local cRoute  := "c:\temp\"+cFileTxt+cFileExt
-    //Local cRoute  := cDirec+cFileTxt+cFileExt
+   // Local cRoute  := cDirec+cFileTxt+cFileExt
     nHandle       := FCreate(cRoute,FC_NORMAL,0,.F.)
 
     If nHandle < 0
@@ -602,19 +604,20 @@ Static Function UDETGRID()
     cQuery += "                      AND S.EK_TIPODOC  = 'CP'"                                       + CRLF
     cQuery += "     INNER JOIN  "+RetSQLName('SA6')+ " SA6 " + " ON SA6.A6_FILIAL   = S.EK_FILIAL"   + CRLF
     cQuery += "                       AND SA6.A6_COD     = S.EK_BANCO"                               + CRLF
-    cQuery += "                       AND SA6.A6_AGENCIA = 'BCO'"                                    + CRLF
+    cQuery += "                       AND SA6.A6_AGENCIA = S.EK_AGENCIA"                             + CRLF
     cQuery += " WHERE SEK.EK_TIPODOC IN('PA','TB') "                                                 + CRLF
-    cQuery += "  AND SEK.EK_TIPO IN('PA','NF') "                                                     + CRLF
-    cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
-    //  cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "'"                                                     + CRLF
-    cQuery += "  AND SA6.A6_COD = '01' "                                                                    + CRLF
-    cQuery += "  AND SEK.EK_LA <> 'C'"                                                                      + CRLF
-    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'"              + CRLF
-    cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*'"                                       + CRLF
-    cQuery += "  AND S.D_E_L_E_T_ <> '*'"                                                                   + CRLF
-    cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                                  + CRLF
-    cQuery += "  AND SEK.EK_XCARSTS <> 'P' "                                                                + CRLF
-    cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                         + CRLF
+    cQuery += "  AND SEK.EK_TIPO IN('PA','NF','NDP') "                                               + CRLF
+//    cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
+    cQuery += "  AND SEK.EK_FILIAL  = '01'"                                                          + CRLF
+    //cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "' AND SA6.A6_NREDUZ = '" +ALLTRIM(MV_PAR02)+ "'"    + CRLF
+    cQuery += "  AND SA6.A6_COD = '01' AND SA6.A6_NREDUZ = '" +ALLTRIM(MV_PAR02)+ "'"                                                                    + CRLF
+    cQuery += "  AND SEK.EK_LA <> 'C'"                                                               + CRLF
+    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'"       + CRLF
+    cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*' AND SA6.D_E_L_E_T_ <> '*'"      + CRLF
+    cQuery += "  AND S.D_E_L_E_T_ <> '*'   AND FIL.D_E_L_E_T_ <> '*'"                                + CRLF
+    cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                           + CRLF
+    cQuery += "  AND SEK.EK_XCARSTS <> 'P' "                                                         + CRLF
+    cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                    + CRLF
     cQuery += "  ORDER BY SA2.A2_NOME ASC "
 
     TCQuery cQuery New Alias "QRY_SEK"
@@ -659,8 +662,9 @@ Static Function UDETGRID()
 Return
 
 Static Function Proccess()
-    Local aColsAux := oMsGetPAG:aCols //Objeto de MsNewGetDatos del Grid para la carga de informacion detalle
+    Local aColsAux  := oMsGetPAG:aCols //Objeto de MsNewGetDatos del Grid para la carga de informacion detalle
     Local cCodBanco := MV_PAR01
+    Local cNREDUZ   := MV_PAR02
     Local bPosCheck  := aScan(aHead, {|x| Alltrim(x[2]) == "CHECK"})
     Local nPosCODBANCO  := aScan(aHead, {|x| Alltrim(x[2]) == "BANCO"}) //YA
     Local nPosEK_ORDPAGO  := aScan(aHead, {|x| Alltrim(x[2]) == "EK_ORDPAGO"}) //YA
@@ -684,7 +688,7 @@ Static Function Proccess()
     Static  cCod := ""
     Static cValor := ""
     Static nContador := 1
-    If MsgYesNo("Confirmacion de Pago...! "+ "Desea Continua?")
+    If MsgYesNo("Confirmacion de Pago.. "+ "Desea Continuar?")
         DbSelectArea('SEK')
         cUser := FwGetUserName(RetCodUsr()) //Obtiene el usuario del programa
         //Convierte fecha a caracter con un formato ejemplo 23/04/2021 a 20210423 tipo caracter
@@ -714,7 +718,7 @@ Static Function Proccess()
                 cNombreP := aColsAux[nLinea][nPosA2_NOME]
                 //  BuscBanco(1, cOrden, cTipoDoc, cNum, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, cBancoN,cCodBanco)
                 If nContador == 1
-                    cSecTran := Consecu(cCodBanco,1,0) //OBTIENE EL CONSECUTIVO DE LA SA6 POR BANCO
+                    cSecTran := Consecu(cCodBanco,cNREDUZ,1,0) //OBTIENE EL CONSECUTIVO DE LA SA6 POR BANCO
                     cValor := StrZero(cSecTran,5,0)
                 EndIf
                 dbSetOrder(1)      // EK_FILIAL+EK_ORDPAGO+EK_TIPODOC+EK_PRFIXO+EK_NUM+EK_PARCELA+EK_TIPO+EK_SEQ
@@ -738,7 +742,7 @@ Static Function Proccess()
                         SEK->(MsUnlock()) //Destraba el registro
                     ENDIF
                     IF  nContador == 1
-                        cResul := Consecu(cCodBanco,2,cSecTran)
+                        cResul := Consecu(cCodBanco,cNREDUZ,2,cSecTran)
                         nContador := 2
                     EndIf
                 ENDIF
@@ -757,14 +761,15 @@ Static Function Proccess()
     oDlgPvt:End() //Cierra la Venta de Dialogo
 Return
 
-Static Function Consecu(cCodBanco,nOpcion,nSecTran)
+Static Function Consecu(cCodBanco,cNREDUZ,nOpcion,nSecTran)
     Local cQuery
     Local nSecu := 0
-    Local aArea  := GetArea()
+    Local aArea := GetArea()
     cQuery := "SELECT A6_COD, A6_XSEQTRA, A6_AGENCIA, A6_NUMCON " + CRLF
-    cQuery += "FROM " + RetSQLName('SA6') + " SA6"        + CRLF
+    cQuery += "FROM " + RetSQLName('SA6') + " SA6"                + CRLF
     cQuery += "WHERE SA6.A6_FILIAL = '" + FwxFilial('SA6') + "' AND SA6.A6_COD = '"+ cCodBanco +"' "   + CRLF
-    cQuery += "AND SA6.D_E_L_E_T_ <> '*'"
+    cQuery += "  AND SA6.A6_NREDUZ    = '"+ ALLTRIM(cNREDUZ) +"' "   + CRLF
+    cQuery += "  AND SA6.D_E_L_E_T_ <> '*'"
     TCQuery cQuery new Alias 'TMP_SA6'
     IF nOpcion == 1 //Si es 1 Obtiene el consecutivo
         TMP_SA6->(DbGoTop())
@@ -796,12 +801,13 @@ Return nSecu
 Static Function Agrupar(cSecuAuxi)
     Local aArea  := GetArea()
     Local cQuery   := ""
-    cCodBanco := MV_PAR01
-    cQuery := "SELECT SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC, SEK.EK_XCARFEC, SEK.EK_SEQ, "      + CRLF
-    cQuery += "       SUM(SEK.EK_VALOR) AS VALOR, SEK.EK_FORNECE, SA2.A2_NOME, "                                    + CRLF
-    cQuery += "       FIL.FIL_CONTA,  FIL.FIL_TIPCTA, FIL.FIL_TIPO, "                                      + CRLF
-    cQuery += "       SA6.A6_NUMCON, "                                                                     + CRLF
-    cQuery += "       Z41.Z41_CODBAN AS CODBANCO, Z41.Z41_CODALT"                                            + CRLF
+    //cCodBanco := MV_PAR01
+    cCodBanco := MV_PAR02
+    cQuery := "SELECT SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC, SEK.EK_XCARFEC, SEK.EK_SEQ, "     + CRLF
+    cQuery += "       SUM(SEK.EK_VALOR) AS VALOR, SEK.EK_FORNECE, SA2.A2_NOME, "                     + CRLF
+    cQuery += "       FIL.FIL_CONTA,  FIL.FIL_TIPCTA, FIL.FIL_TIPO, "                                + CRLF
+    cQuery += "       SA6.A6_NUMCON, "                                                               + CRLF
+    cQuery += "       Z41.Z41_CODBAN AS CODBANCO, Z41.Z41_CODALT"                                    + CRLF
     cQuery += " FROM  " + RetSQLName('SEK') + " SEK"                                                 + CRLF
     cQuery += "     INNER JOIN "+RetSQLName('SA2')+ " SA2" +" ON SEK.EK_FORNECE = SA2.A2_COD"        + CRLF
     cQuery += "                      AND SEK.EK_LOJA    = SA2.A2_LOJA"                               + CRLF
@@ -813,23 +819,24 @@ Static Function Agrupar(cSecuAuxi)
     cQuery += "                      AND S.EK_TIPODOC  = 'CP'"                                       + CRLF
     cQuery += "     INNER JOIN  "+RetSQLName('SA6')+ " SA6 " + " ON SA6.A6_FILIAL   = S.EK_FILIAL"   + CRLF
     cQuery += "                       AND SA6.A6_COD     = S.EK_BANCO"                               + CRLF
-    cQuery += "                       AND SA6.A6_AGENCIA = 'BCO'"                                    + CRLF
+    cQuery += "                       AND SA6.A6_AGENCIA = S.EK_AGENCIA"                             + CRLF
     cQuery += " WHERE SEK.EK_TIPODOC IN('PA','TB') "                                                 + CRLF
-    cQuery += "  AND SEK.EK_TIPO IN('PA','NF') "                                                     + CRLF
-    cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
-    //cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "'"                                                     + CRLF
-    cQuery += "  AND SA6.A6_COD = '01' "                                                     + CRLF
+    cQuery += "  AND SEK.EK_TIPO IN('PA','NF','NDP') "                                               + CRLF
+//    cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
+    cQuery += "  AND SEK.EK_FILIAL  = '01'"                                                          + CRLF
+    //cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "' AND SA6.A6_NREDUZ = '" +ALLTRIM(MV_PAR02)+ "'"    + CRLF
+    cQuery += "  AND SA6.A6_COD = '01' AND SA6.A6_NREDUZ = '" +ALLTRIM(MV_PAR02)+ "' "                                                     + CRLF
     cQuery += "  AND SEK.EK_LA <> 'C'"                                                               + CRLF
-    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'" + CRLF
-    cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*'"                                  + CRLF
-    cQuery += "  AND S.D_E_L_E_T_ <> '*'"                                                              + CRLF
-    cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                             + CRLF
-    cQuery += "  AND SEK.EK_XCARSTS = 'P' "                                                         + CRLF
-    cQuery += "  AND SEK.EK_XNUMCAR = '" +cSecuAuxi+ "'"                                                         + CRLF
-    cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                         + CRLF
-    cQuery += "  GROUP BY SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC,  SEK.EK_XCARFEC,"                + CRLF
+    cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'"       + CRLF
+    cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*' AND SA6.D_E_L_E_T_ <> '*'"      + CRLF
+    cQuery += "  AND S.D_E_L_E_T_ <> '*'   AND FIL.D_E_L_E_T_ <> '*'"                                + CRLF
+    cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                           + CRLF
+    cQuery += "  AND SEK.EK_XCARSTS = 'P' "                                                          + CRLF
+    cQuery += "  AND SEK.EK_XNUMCAR = '" +cSecuAuxi+ "'"                                             + CRLF
+    cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                    + CRLF
+    cQuery += "  GROUP BY SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC,  SEK.EK_XCARFEC,"             + CRLF
     cQuery += "  SEK.EK_SEQ, SEK.EK_FORNECE, SA2.A2_NOME, FIL.FIL_CONTA, FIL.FIL_TIPCTA, FIL.FIL_TIPO, " + CRLF
-    cQuery += "  SA6.A6_NUMCON, Z41.Z41_CODBAN, Z41.Z41_CODALT"                                         + CRLF
+    cQuery += "  SA6.A6_NUMCON, Z41.Z41_CODBAN, Z41.Z41_CODALT"                                          + CRLF
 
     TCQuery cQuery New Alias "Q_SEK"
     Q_SEK->(DbGoTop())
