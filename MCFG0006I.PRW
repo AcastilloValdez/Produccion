@@ -30,7 +30,7 @@ User Function MCFG0006I()
     AAdd(aCampos,{"TR_DEPTO","C",050,0})
     AAdd(aCampos,{"TR_EMAIL","C",150,0})
     AAdd(aCampos,{"TR_SUPER","C",006,0})
-    AAdd(aCampos,{"TR_POS"  ,"N",012,0})
+    AAdd(aCampos,{"TR_POS"  ,"N",012,0}) 
 
     //Se o alias estiver aberto, fechar para evitar erros com alias aberto
     If (Select("TRB") <> 0)
