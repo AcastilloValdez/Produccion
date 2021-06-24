@@ -1,10 +1,62 @@
+/*
++----------------------------------------------------------------------------+
+!                       FICHA TECNICA DEL PROGRAMA                           !
++----------------------------------------------------------------------------+
+!DATOS DEL PROGRAMA                                                          !
++------------------+---------------------------------------------------------+
+!Tipo              ! RUTINA DE CODANA MATA0410                     !
++------------------+---------------------------------------------------------+
+!Modulo            ! FACTURACION                                                 !
++------------------+---------------------------------------------------------+
+!Descripcion       !LIBERACION DE PRODUCTO            !
+!                  ! AC.                                                   !
++------------------+---------------------------------------------------------+
+!Autor             ! Anderson Castillo                                !
++------------------+---------------------------------------------------------+
+!Fecha creacion    ! Junio/2021                                              !
++------------------+---------------------------------------------------------+
+!   ATUALIZACIONES                                                           !
++-------------------------------------------+-----------+-----------+--------+
+!Descripcion detallada de la actualizacion  !Nombre del ! Analista  !FEcha de!
+!                                           !Solicitante! Respons.  !Atualiz.!
++-------------------------------------------+-----------+-----------+--------+
+!                                           !           !           !        !
+!                                           !           !           !        !
+!                                           !           !           !        !
++-------------------------------------------+-----------+-----------+--------+
+.________________________________________________________________________________________.
+|   //////  //////  //////  //    //  //////  | Developed For Protheus by TOTVS          |
+|    //    //  //    //     //   //  //       | ADVPL                                    |
+|   //    //  //    //      // //   //////    | TOTVS Technology                         |
+|  //    //  //    //       ////       //     | Anderson Castillo.|
+| //    //////    //        //    //////      | acastillo@valdez.com.ec                 |
+|_____________________________________________|__________________________________________|
+|                          _==/                             \==                          |
+|                         /XX/            |\___/|            \XX\                        |
+|                       /XXXX\            |XXXXX|            /XXXX\                      |
+|                      |XXXXXX\_         _XXXXXXX_         _/XXXXXX|                     |
+|                      XXXXXXXXXXXxxxxxxxXXXXXXXXXXXxxxxxxxXXXXXXXXXXX                   |
+|                     |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|                  |
+|                     XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                  |
+|                     |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|                  |
+|                      XXXXXX/^^^^"\XXXXXXXXXXXXXXXXXXXXX/^^^^^\XXXXXX                   |
+|                      |XXX|       \XXX/^^\XXXXX/^^\XXX/       |XXX|                     |
+|                        \XX\       \X/    \XXX/    \X/       /XX/                       |
+|                           "\       "      \X/      "       /"                          |
+|________________________________________________________________________________________|
+|                          //       ////    //   //   //////   //                        |
+|                        // //     //  //   //  //   //  //   //                         |
+|                       //  //    //  //    // //   //////   //                          |
+|                      ///////   //  //     ////   //       //                           |
+|                     //    //  ////        //    //       ///////                       |
+|_______________________________________________________________________________________*/
 // BIBLIOTECAS NECESSÁRIAS
 
 #Include "TOTVS.ch"
 #Include "TBICONN.ch"
 #Include "Topconn.ch"
 //Referencia Pregunta UOPAPESO, Consulta Estandar SC5_UP
-User Function USC5APESO() 
+User Function USC5APESO()
     STATIC cPerg    := "UOPAPESO"
     //Static cPedido := "000044"
     //Static cCliente := "1001024130"
@@ -20,27 +72,28 @@ Return
 Static Function TMATA410()
     Local cQuery
     //  Local nSecu := 0
-   // Local nTotalItem :=0
-   // Local cProrratear
-   // Local nTotal := 0
+    // Local nTotalItem :=0
+    // Local cProrratear
+    // Local nTotal := 0
     Local nOpr    := 4  // NÚMERO DE OPERACION (INCLUSION) 3
     Local aHeader := {} // INFORMACIONES DE CABECERA
     Local aLine   := {} // INFORMACIONES DE LINEAS
     Local aItems  := {} // CONJUNTO DE LINEAS
     Local aArea   := {} // ARMAZENA ÁREA CORRENTE
     Local cPedido := MV_PAR01 //NUMERO DE PEDIDO
+    Local bconfir := .T.
     Private lMsErroAuto := .F.
     Private lMsHelpAuto := .T.
     Static nC5_XVOLALC := 0
     aArea := GetArea() // CAPTURA DA ÁREA PARA FUTURA RESTAURACION
-    cQuery := "SELECT C6_ITEM, C6_PRODUTO, C6_QTDVEN, C6_PRCVEN, C6_VALOR, C6_TES, C6_QTDLIB " + CRLF
+    cQuery := "SELECT C6_ITEM, C6_PRODUTO, C6_QTDVEN, C6_PRCVEN, C6_VALOR, C6_TES, C6_QTDLIB, C6_CONCEPT " + CRLF
     cQuery += "FROM " + RetSQLName('SC6') + " SC6"                + CRLF
     cQuery += "WHERE SC6.C6_FILIAL = '" + FwxFilial('SC6') + "' AND SC6.C6_NUM = '"+ ALLTRIM(cPedido) +"' "   + CRLF
     cQuery += " AND SC6.D_E_L_E_T_ <> '*'"
 
     TCQuery cQuery new Alias 'QRY_SC6'
 
-   /* If ! QRY_SC6->(EoF())
+    /* If ! QRY_SC6->(EoF())
         QRY_SC6->(DbGoTop())
         While ('QRY_SC6')->(!Eof())
             nTotalItem +=  QRY_SC6->C6_QTDVEN
@@ -62,22 +115,28 @@ Static Function TMATA410()
         AAdd(aHeader, {"C5_CONDPAG",  SC5->C5_CONDPAG, NIL})
         AAdd(aHeader, {"C5_TRANSP",  SC5->C5_TRANSP, NIL})
         AAdd(aHeader, {"C5_TPFRETE", SC5->C5_TPFRETE, NIL})
-        AAdd(aHeader, {"C5_XPEBRU",   SC5->C5_XPEBRU, NIL})
-        AAdd(aHeader, {"C5_XPETARA",  SC5->C5_XPETARA, NIL})
-        AAdd(aHeader, {"C5_XPENETO", SC5->C5_XPENETO, NIL})
-        AAdd(aHeader, {"C5_XTEMPER", SC5->C5_XTEMPER, NIL})
-        AAdd(aHeader, {"C5_XDENSAL", SC5->C5_XDENSAL, NIL})
-        AAdd(aHeader, {"C5_XVOLALC", SC5->C5_XVOLALC, NIL})
-        AAdd(aHeader, {"C5_XGRDALC", SC5->C5_XGRDALC, NIL})
-        nC5_XVOLALC := SC5->C5_XVOLALC
-        //cProrratear :=  "1" //SC5->C5_XPRORRA //1 prorratea 2 no prorratea
+        If SC5->C5_XPEBRU == 0 .OR. SC5->C5_XPETARA == 0 .OR. SC5->C5_XPENETO == 0 .OR. SC5->C5_XTEMPER == 0 .OR. SC5->C5_XDENSAL == 0 .OR. SC5->C5_XVOLALC == 0 .OR. SC5->C5_XGRDALC == 0
+            //HELP(' ',1,cabecalho ,,descricao,2,0,,,,,, solucao)
+            MsgAlert("Algunos campos se encuentra vacios..","Campos Obligatorios")
+            bconfir := .F.
+        Else
+            AAdd(aHeader, {"C5_XPEBRU",   SC5->C5_XPEBRU, NIL})
+            AAdd(aHeader, {"C5_XPETARA",  SC5->C5_XPETARA, NIL})
+            AAdd(aHeader, {"C5_XPENETO", SC5->C5_XPENETO, NIL})
+            AAdd(aHeader, {"C5_XTEMPER", SC5->C5_XTEMPER, NIL})
+            AAdd(aHeader, {"C5_XDENSAL", SC5->C5_XDENSAL, NIL})
+            AAdd(aHeader, {"C5_XVOLALC", SC5->C5_XVOLALC, NIL})
+            AAdd(aHeader, {"C5_XGRDALC", SC5->C5_XGRDALC, NIL})
+            nC5_XVOLALC := SC5->C5_XVOLALC
+            //cProrratear :=  "1" //SC5->C5_XPRORRA //1 prorratea 2 no prorratea
+        EndIf
     Else
         DbCloseArea()
         MsgAlert("No se encontró el pedido...","A V I S O")
     EndIf
 
     // DATOS DEL DETALLE
-    If ! QRY_SC6->(EoF())
+    If ! QRY_SC6->(EoF()) .AND. bconfir
         QRY_SC6->(DbGoTop())
         While ('QRY_SC6')->(!Eof())
             aLine := {}
@@ -87,6 +146,7 @@ Static Function TMATA410()
             nA04 := QRY_SC6->C6_PRCVEN
             nA05 := QRY_SC6->C6_TES
             nA06 := nC5_XVOLALC
+            nA07 := QRY_SC6->C6_CONCEPT
             nValorTotal := Round(nC5_XVOLALC*nA04,2) //QRY_SC6->C6_PRCVEN
             AAdd(aLine, {"C6_ITEM", nA01 , NIL}) //QRY_SC6->C6_ITEM
             AAdd(aLine, {"C6_PRODUTO", nA02, NIL}) //QRY_SC6->C6_PRODUTO
@@ -95,38 +155,38 @@ Static Function TMATA410()
             AAdd(aLine, {"C6_VALOR", nValorTotal, NIL})
             AAdd(aLine, {"C6_TES", nA05, NIL}) //QRY_SC6->C6_TES
             AAdd(aLine, {"C6_QTDLIB", nA06, NIL}) //C5_XVOLALC nC5_XVOLALC
+            AAdd(aLine, {"C6_CONCEPT", nA07, NIL}) //C6_CONCEPT CONCEPTO
+
             AAdd(aItems, aLine)
             QRY_SC6->(DbSkip())
         EndDo
         QRY_SC6->(DbCloseArea())
-        MsExecAuto({|x, y, z| MATA410(x, y, z)}, aHeader, aItems, nOpr)
 
-        // VALIDACION DE ERROR
-        If (lMsErroAuto)
-            MostraErro()
-            // RollbackSX8() // REMOVER PARA GENRACION DE NUMERACION AUTOMÁTICA DE LA ROTINA
-            ConOut(Repl("-", 80))
-            ConOut(PadC("MATA410 automatic routine ended with error", 80))
-            ConOut(PadC("Ended at: " + Time(), 80))
-            ConOut(Repl("-", 80))
-        Else
-            // ConfirmSX8() // CONFIRMACION PARA GENERACION DE NUMERACION AUTOMÁTICA DE LA ROTINA
-            ConOut(Repl("-", 80))
-            ConOut(PadC("MATA410 automatic routine successfully ended", 80))
-            ConOut(PadC("Ended at: " + Time(), 80))
-            ConOut(Repl("-", 80))
-            MsgInfo("La rutina automática MATA410 finalizó con éxito ","Mensaje")
-        EndIf
-
-        RestArea(aArea) // RESTAURACION DE ÁREA ANTERIOR
-        // RPCClearEnv() // FECHAMENTO DE AMBIENTE (REMOVER SE EXECUTADO VIA SMARTCLIENT)
+        Begin Transaction
+            MsExecAuto({|x, y, z| MATA410(x, y, z)}, aHeader, aItems, nOpr)
+            // VALIDACION DE ERROR
+            If (lMsErroAuto)
+                MostraErro()
+                // RollbackSX8() // REMOVER PARA GENRACION DE NUMERACION AUTOMÁTICA DE LA ROTINA
+                ConOut(Repl("-", 80))
+                ConOut(PadC("MATA410 automatic routine ended with error", 80))
+                ConOut(PadC("Ended at: " + Time(), 80))
+                ConOut(Repl("-", 80))
+                DisarmTransaction()
+                Alert("Se produjo un error en la ejecucion de la Rutina ","A V I S O")
+            Else
+                // ConfirmSX8() // CONFIRMACION PARA GENERACION DE NUMERACION AUTOMÁTICA DE LA ROTINA
+                ConOut(Repl("-", 80))
+                ConOut(PadC("MATA410 automatic routine successfully ended", 80))
+                ConOut(PadC("Ended at: " + Time(), 80))
+                ConOut(Repl("-", 80))
+                MsgInfo("La rutina automática MATA410 finalizó con éxito ","Mensaje")
+            EndIf
+            RestArea(aArea) // RESTAURACION DE ÁREA ANTERIOR
+            // RPCClearEnv() // FECHAMENTO DE AMBIENTE (REMOVER SE EXECUTADO VIA SMARTCLIENT)
+        End Transaction
     EndIf
-    // DADOS DOS ITENS
-    //  AAdd(aLine, {"C6_PRUNIT", 1116.13, NIL})
-    // nCanti := 36807
-    // nValUni := 0.9250
-    // nValTot := nCanti * nValUni
-    //  nValtot := round(nValtot,2)
+
 Return (NIL)
 
 Static Function fMontaPed(aRegs, aCabec, aItens, nOpc, cPedido, lReprocess, nValPed)
