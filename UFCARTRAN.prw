@@ -105,7 +105,6 @@ User Function UFCARTRAN
         EndIf
     End
     UCABGRID()
-//Agrupar('P18062100002')
     //StoreProcedure()
 Return
 Static Function BuscBanco(nOp, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoCu, cCuentaP,cRuc,cNombreP,dFechCart, Banco,cidBanco,cSecuAuxi,cCodAlt)
@@ -296,7 +295,7 @@ Static Function UBANKPCHA(Opcion, cOrden, cTipoDoc, cTipo,cCuentaE,nValor,cTipoC
             cA09 := "0036"
         ENDIF
         cA13 := RTRIM(cRuc) //RUC de proveedor,  PadR(RTRIM(PAGOS->EK_FORNECE),14," ")
-        cA14 := SUBSTR(RTRIM(cNombreP),0,40) + Replicate(" ", 40-Len(RTRIM(cNombreP)))//NOMBRE de proveedor,PadR(RTRIM(PAGOS->A2_NOME), 40," ")
+        cA14 := RTRIM(cNombreP) + Replicate(" ", 60-Len(RTRIM(cNombreP)))//NOMBRE de proveedor,PadR(RTRIM(PAGOS->A2_NOME), 40," ")
         cA15 := ""
         cA16 := ""
         cA17 := ""
@@ -519,24 +518,22 @@ Static Function UCABGRID()
     Static bVerificar := .F.
     //              Título               Campo        Máscara                        Tamaño                   Decimal                   Valid               Usado  Tipo F3     Combo
 
-    aAdd(aHead, {"",                  "CHECK",           "@BMP",                        2,                          0,                        ".F.",              "   ", "C", "",    "V",     "",      "",        "", "V"})
-    aAdd(aHead, {"Ruc",              "EK_FORNECE",       "",                            15,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
-    aAdd(aHead, {"Proveedor",        "A2_NOME",          "",                            35,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
-    aAdd(aHead, {"Valor Creditar",    "VALPAGAR",     "@E 999,999,999.99",    10, 		    	        0,                        ".T.",              ".T.", "N", "",    ""} )
-    aAdd(aHead, {"Retencion",        "E2_RETENCION",    "@E 999,999,999.99",    10, 		    	        0,                        ".T.",              ".T.", "N", "",    ""} )
-    aAdd(aHead, {"Total Factura",    "EK_VALOR",        "@E 999,999,999.99",    10, 		    	        0,                        ".T.",              ".T.", "N", "",    ""} )
-    aAdd(aHead, {"Cuenta Proveedor", "FIL_CONTA",       "",                             11, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Banco Proveedor",   "Z41_DESCRI",     "",                             24, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Tipo Cuenta",      "FIL_TIPCTA",      "",                             20, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Cuenta Empresa",    "A6_NUMCON",      "",                             20, 					        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"#Transaccion",     "EK_NUM",          "",                             13,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Orden",            "EK_ORDPAGO",      "",                             15, 					    0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Tipo",             "EK_TIPO",         "",                             10,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Tipo Dcto",        "TDOC",             "",                            2, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Prefijo Titulo",   "EK_PREFIXO",      "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Cuota",            "EK_PARCELA",      "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Sec.Registro",     "EK_SEQ",          "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
-    aAdd(aHead, {"Banco",            "BANCO",           "",                            3,  		     	        0,                        ".T.",              ".T.", "C", "",    "" } )
+    aAdd(aHead, {"",                  "CHECK",       "@BMP",                        2,                          0,                        ".F.",              "   ", "C", "",    "V",     "",      "",        "", "V"})
+    aAdd(aHead, {"Ruc",              "EK_FORNECE",   "",                            15,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
+    aAdd(aHead, {"Proveedor",        "A2_NOME",      "",                            35,  				        0,                        ".T.",              ".T.", "C", "",    "" } )
+    aAdd(aHead, {"Valor",            "EK_VALOR",    "@E 999,999,999,999,999.99",    10, 		    	        0,                        ".T.",              ".T.", "N", "",    ""} )
+    aAdd(aHead, {"Cuenta Proveedor", "FIL_CONTA",   "",                             11, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Banco Proveedor",   "Z41_DESCRI",   "",                           24, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Tipo Cuenta",      "FIL_TIPCTA",   "",                            20, 				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Cuenta Empresa",    "A6_NUMCON",    "",                           20, 					        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"#Transaccion",     "EK_NUM",       "",                            13,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Orden",            "EK_ORDPAGO",   "",                            15, 					    0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Tipo",             "EK_TIPO",      "",                            10,  				        0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Tipo Dcto",        "TDOC",   "",                                  2, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Prefijo Titulo",   "EK_PREFIXO",   "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Cuota",            "EK_PARCELA",   "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Sec.Registro",     "EK_SEQ",       "",                            3, 				            0,                        ".T.",              ".T.", "C", "",    ""} )
+    aAdd(aHead, {"Banco",            "BANCO",        "",                            3,  		     	        0,                        ".T.",              ".T.", "C", "",    "" } )
     Processa({|| UDETGRID() }, "Cargando ... Espere ....")
     //Creación de la pantalla con los datos a informar
     DEFINE MSDIALOG oDlgPvt TITLE "CARTA TRANSFERENCIA" FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
@@ -595,13 +592,10 @@ Return
 Static Function UDETGRID()
     Local aArea  := GetArea()
     Local cQuery   := ""
-    Local auxiliar := "PICHINCHA"
+    Local auxiliar := "BOLIVARIANO"
     Local nTotal := 0
     cQuery := "SELECT SEK.EK_ORDPAGO, SEK.EK_NUM,  SEK.EK_TIPO, SEK.EK_TIPODOC AS TDOC, SEK.EK_PREFIXO, SEK.EK_PARCELA, SEK.EK_SEQ,"      + CRLF
-    cQuery += "       ( CASE WHEN SEK.EK_TIPO = 'PA' THEN SEK.EK_VALOR ELSE SEK.EK_VALORIG END - (SE2.E2_VALIMP2+SE2.E2_VALIMP6) ) AS VALPAGAR,"              + CRLF
-    cQuery += "       (SE2.E2_VALIMP2+SE2.E2_VALIMP6) AS E2_RETENCION,"                + CRLF
-    cQuery += "       ( CASE WHEN SEK.EK_TIPO = 'PA' THEN SEK.EK_VALOR ELSE SEK.EK_VALORIG END ) AS EK_VALOR,"                + CRLF
-    cQuery += "       SEK.EK_FORNECE, SA2.A2_NOME,"                                                  + CRLF
+    cQuery += "       SEK.EK_VALOR, SEK.EK_FORNECE, SA2.A2_NOME,"                                    + CRLF
     cQuery += "       SEK.EK_EMISSAO, SEK.EK_VENCTO,  SEK.EK_FORNEPG, SEK.EK_NATUREZ,"               + CRLF
     cQuery += "       FIL.FIL_CONTA,  FIL.FIL_TIPCTA, FIL.FIL_TIPO,   FIL.FIL_MOVCTO,"               + CRLF
     cQuery += "       SEK.EK_BANCO,   SA6.A6_NUMCON,  SA6.A6_NREDUZ,  SA6.A6_CONTATO,"               + CRLF
@@ -619,23 +613,16 @@ Static Function UDETGRID()
     cQuery += "     INNER JOIN  "+RetSQLName('SA6')+ " SA6 " + " ON SA6.A6_FILIAL   = S.EK_FILIAL"   + CRLF
     cQuery += "                       AND SA6.A6_COD     = S.EK_BANCO"                               + CRLF
     cQuery += "                       AND SA6.A6_AGENCIA = S.EK_AGENCIA"                             + CRLF
-    cQuery += "     LEFT JOIN  "+RetSQLName('SE2')+ " SE2 " + " ON SE2.E2_FILIAL  = SEK.EK_FILIAL"   + CRLF
-    cQuery += "                         AND SE2.E2_FORNECE = SEK.EK_FORNECE"                               + CRLF
-    cQuery += "                         AND SE2.E2_LOJA    = SEK.EK_LOJA"                             + CRLF
-    cQuery += "                         AND SE2.E2_PREFIXO = SEK.EK_PREFIXO"                             + CRLF
-    cQuery += "                         AND SE2.E2_NUM     = SEK.EK_NUM"                             + CRLF
-    cQuery += "                         AND SE2.E2_ORDPAGO = SEK.EK_ORDPAGO"                             + CRLF
-    cQuery += "                         AND SE2.E2_TIPO    = 'NF' "                             + CRLF
     cQuery += " WHERE SEK.EK_TIPODOC IN('PA','TB') "                                                 + CRLF
     cQuery += "  AND SEK.EK_TIPO IN('PA','NF','NDP') "                                               + CRLF
     //    cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
     cQuery += "  AND SEK.EK_FILIAL  = '01'"                                                          + CRLF
     //cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "' AND SA6.A6_NREDUZ = '" +ALLTRIM(MV_PAR02)+ "'"    + CRLF
-    cQuery += "  AND SA6.A6_COD = '04' AND SA6.A6_NREDUZ = '" +ALLTRIM(auxiliar)+ "'"                                                                    + CRLF
+    cQuery += "  AND SA6.A6_COD = '01' AND SA6.A6_NREDUZ = '" +ALLTRIM(auxiliar)+ "'"                                                                    + CRLF
     cQuery += "  AND SEK.EK_LA <> 'C'"                                                               + CRLF
     cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'"       + CRLF
     cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*' AND SA6.D_E_L_E_T_ <> '*'"      + CRLF
-    cQuery += "  AND S.D_E_L_E_T_ <> '*'   AND FIL.D_E_L_E_T_ <> '*' AND SE2.D_E_L_E_T_ <> '*'"                                + CRLF
+    cQuery += "  AND S.D_E_L_E_T_ <> '*'   AND FIL.D_E_L_E_T_ <> '*'"                                + CRLF
     cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                           + CRLF
     cQuery += "  AND SEK.EK_XCARSTS <> 'P' "                                                         + CRLF
     cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                    + CRLF
@@ -659,8 +646,6 @@ Static Function UDETGRID()
             oBmpOK,;
             QRY_SEK->EK_FORNECE,;
             QRY_SEK->A2_NOME,;
-            QRY_SEK->VALPAGAR,;
-            QRY_SEK->E2_RETENCION,;
             QRY_SEK->EK_VALOR,;
             QRY_SEK->FIL_CONTA,;
             QRY_SEK->Z41_DESCRI,;
@@ -824,15 +809,12 @@ Return nSecu
 Static Function Agrupar(cSecuAuxi)
     Local aArea  := GetArea()
     Local cQuery   := ""
-    Local cvvv := "PICHINCHA"
+    Local cvvv := "BOLIVARIANO"
     //cCodBanco := MV_PAR01
     cCodBanco := "PICHINCHA"//MV_PAR02
 
     cQuery := "SELECT SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC, SEK.EK_XCARFEC, SEK.EK_SEQ, "     + CRLF
-    cQuery += "       ( CASE WHEN SEK.EK_TIPO = 'PA' THEN SUM(SEK.EK_VALOR) ELSE SUM(SEK.EK_VALORIG) END - SUM(SE2.E2_VALIMP2+SE2.E2_VALIMP6) ) AS VALPAGAR, "                     + CRLF
-    cQuery += "        ( CASE WHEN SEK.EK_TIPO = 'PA' THEN SUM(SEK.EK_VALOR) ELSE SUM(SEK.EK_VALORIG) END ) AS EK_VALOR, "                     + CRLF
-    cQuery += "        SUM(SE2.E2_VALIMP2 + SE2.E2_VALIMP6) AS RETENCION,"                     + CRLF
-    cQuery += "       SEK.EK_FORNECE, SA2.A2_NOME, "                     + CRLF
+    cQuery += "       SUM(SEK.EK_VALOR) AS VALOR, SEK.EK_FORNECE, SA2.A2_NOME, "                     + CRLF
     cQuery += "       FIL.FIL_CONTA,  FIL.FIL_TIPCTA, FIL.FIL_TIPO, "                                + CRLF
     cQuery += "       SA6.A6_NUMCON, "                                                               + CRLF
     cQuery += "       Z41.Z41_CODBAN AS CODBANCO, Z41.Z41_CODALT"                                    + CRLF
@@ -848,27 +830,19 @@ Static Function Agrupar(cSecuAuxi)
     cQuery += "     INNER JOIN  "+RetSQLName('SA6')+ " SA6 " + " ON SA6.A6_FILIAL   = S.EK_FILIAL"   + CRLF
     cQuery += "                       AND SA6.A6_COD     = S.EK_BANCO"                               + CRLF
     cQuery += "                       AND SA6.A6_AGENCIA = S.EK_AGENCIA"                             + CRLF
-    cQuery += "     LEFT JOIN  "+RetSQLName('SE2')+ " SE2 " + " ON SE2.E2_FILIAL  = SEK.EK_FILIAL"   + CRLF
-    cQuery += "                        AND SE2.E2_FORNECE = SEK.EK_FORNECE"                               + CRLF
-    cQuery += "                        AND SE2.E2_LOJA    = SEK.EK_LOJA"                             + CRLF
-    cQuery += "                        AND SE2.E2_PREFIXO = SEK.EK_PREFIXO"                             + CRLF
-    cQuery += "                        AND SE2.E2_NUM     = SEK.EK_NUM"                             + CRLF
-    cQuery += "                        AND SE2.E2_ORDPAGO = SEK.EK_ORDPAGO"                             + CRLF
-    cQuery += "                        AND SE2.E2_TIPO    = 'NF'"                             + CRLF    
     cQuery += " WHERE SEK.EK_TIPODOC IN('PA','TB') "                                                 + CRLF
     cQuery += "  AND SEK.EK_TIPO IN('PA','NF','NDP') "                                               + CRLF
     //    cQuery += "  AND SEK.EK_FILIAL  = '" +cEmpCod+ "'"                                               + CRLF
     cQuery += "  AND SEK.EK_FILIAL  = '01'"                                                          + CRLF
     //cQuery += "  AND SA6.A6_COD = '" +MV_PAR01+ "' AND SA6.A6_NREDUZ = '" +ALLTRIM(MV_PAR02)+ "'"    + CRLF
-    cQuery += "  AND SA6.A6_COD = '04' AND SA6.A6_NREDUZ = '" +ALLTRIM(cvvv)+ "' "                                                     + CRLF
+    cQuery += "  AND SA6.A6_COD = '01' AND SA6.A6_NREDUZ = '" +ALLTRIM(cvvv)+ "' "                                                     + CRLF
     cQuery += "  AND SEK.EK_LA <> 'C'"                                                               + CRLF
     cQuery += "  AND SEK.EK_EMISSAO BETWEEN '" + DTOS(MV_PAR03) + "' AND '"+DTOS(MV_PAR04)+"'"       + CRLF
     cQuery += "  AND SEK.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*' AND SA6.D_E_L_E_T_ <> '*'"      + CRLF
-    cQuery += "  AND S.D_E_L_E_T_ <> '*'   AND FIL.D_E_L_E_T_ <> '*' AND SE2.D_E_L_E_T_ <> '*'"                                + CRLF
+    cQuery += "  AND S.D_E_L_E_T_ <> '*'   AND FIL.D_E_L_E_T_ <> '*'"                                + CRLF
     cQuery += "  AND SEK.EK_CANCEL = 'F' "                                                           + CRLF
     cQuery += "  AND SEK.EK_XCARSTS = 'P' "                                                          + CRLF
     cQuery += "  AND SEK.EK_XNUMCAR = '" +cSecuAuxi+ "'"                                             + CRLF
-    //cQuery += "  AND SEK.EK_XNUMCAR = 'P18062100002' "                                             + CRLF
     cQuery += "  AND SEK.EK_NATUREZ <> '201003' "                                                    + CRLF
     cQuery += "  GROUP BY SEK.EK_ORDPAGO, SEK.EK_TIPO, SEK.EK_TIPODOC,  SEK.EK_XCARFEC,"             + CRLF
     cQuery += "  SEK.EK_SEQ, SEK.EK_FORNECE, SA2.A2_NOME, FIL.FIL_CONTA, FIL.FIL_TIPCTA, FIL.FIL_TIPO, " + CRLF
@@ -882,7 +856,7 @@ Static Function Agrupar(cSecuAuxi)
         cTipoDoc :=  Q_SEK->EK_TIPODOC
         cTipo :=     Q_SEK->EK_TIPO
         cCuentaE :=  Q_SEK->A6_NUMCON
-        nValor :=    Q_SEK->VALPAGAR
+        nValor :=    Q_SEK->VALOR
         nTipoCu :=   Q_SEK->FIL_TIPCTA
         cCuentaP :=  Q_SEK->FIL_CONTA
         cRuc :=      Q_SEK->EK_FORNECE
@@ -901,14 +875,14 @@ Return
 Static Function _calcular(oDlgPvt)
     Local aColsAux := oMsGetPAG:aCols //Objeto de MsNewGetDatos del Grid para la carga de informacion detalle
     Local bPosCheck  := aScan(aHead, {|x| Alltrim(x[2]) == "CHECK"})
-    Local nPosVALPAGAR  := aScan(aHead, {|x| Alltrim(x[2]) == "VALPAGAR"}) //YA
+    Local nPosEK_VALOR  := aScan(aHead, {|x| Alltrim(x[2]) == "EK_VALOR"}) //YA
     Local nLinea   := 0
     Local nValor :=0
     Local nValorTotal :=0
 
     For nLinea := 1 To Len(aColsAux)
         If  aColsAux[nLinea][bPosCheck] == oBmpOK
-            nValor := aColsAux[nLinea][nPosVALPAGAR]
+            nValor := aColsAux[nLinea][nPosEK_VALOR]
             nValorTotal += nValor
         EndIf
     Next
