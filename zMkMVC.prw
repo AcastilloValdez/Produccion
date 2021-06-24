@@ -20,7 +20,7 @@ User Function zMkMVC()
 	//Setando semáforo, descrição e campo de mark
 	oMark:SetSemaphore(.T.)
 	oMark:SetDescription('Seleção do Cadastro de Artistas')
-	oMark:SetFieldMark('A1_RESFAT')
+	oMark:SetFieldMark('A1_RESFAT') 
 	
 	//Setando Legenda
 	//oMark:AddLegend( "ZZ1->ZZ1_COD <= '000005'", "GREEN",	"Menor ou igual a 5" )
