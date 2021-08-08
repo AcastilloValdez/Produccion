@@ -233,3 +233,23 @@ Static Function MCFG006LEG()
     oLegenda:View()
     oLegenda:DeActivate()
 Return Nil
+
+Static Function ViewRegit
+//Na sua função, você poderia fazer assim:
+
+    TRB->( DbSetOrder(1) )
+    TRB->( DbGoTop() )
+    nCont:=0
+    While !TRB->(Eof())
+        If !Empty(TRB->TR_OK) //Se diferente de vazio, é porque foi marcado
+            cPara += Alltrim(TRB->TR_EMAIL)+";"
+            nCont++
+        Endif
+        TRB->( dbSkip() )
+    EndDo
+       
+    if nCont == 0
+        Alert("Selecione pelo menos um usuario!")
+        return
+    Endif
+Return
